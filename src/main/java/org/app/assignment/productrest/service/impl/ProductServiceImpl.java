@@ -6,13 +6,16 @@ import org.app.assignment.productrest.dto.ProductResponse;
 import org.app.assignment.productrest.dto.ProductResponseDTO;
 import org.app.assignment.productrest.entity.Product;
 import org.app.assignment.productrest.repository.ProductRepository;
+import org.app.assignment.productrest.service.CurrencyConverter;
 import org.app.assignment.productrest.service.ProductService;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -21,6 +24,10 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ModelMapper modelMapper;
+    private final CurrencyConverter currencyConverter;
+
+    @Value("${hnb.usd.converter.code}")
+    private String usdCurrencyCode;
 
     @Override
     public ProductResponse getAllProducts(int page, int size, String sortBy, String sortDirection) {
@@ -51,9 +58,12 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("Product with code " + product.getCode() + " already exists.");
         }
 
-        Product productEntity = productRepository.save(modelMapper.map(product, Product.class));
+        BigDecimal productPriceConverted = currencyConverter.convert(product.getPriceEuro(), usdCurrencyCode);
 
-        return modelMapper.map(productEntity, ProductResponseDTO.class);
+        Product entity = modelMapper.map(product, Product.class);
+        entity.setPriceUsd(productPriceConverted);
+
+        return modelMapper.map(productRepository.save(entity), ProductResponseDTO.class);
     }
 
     @Override
