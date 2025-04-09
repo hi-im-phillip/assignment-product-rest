@@ -24,7 +24,7 @@ public class ProductRequestDTO {
 
     @NotNull(message = "Cijena u eurima je obavezna")
     @DecimalMin(value = "0.0", inclusive = true, message = "Cijena mora biti veća od 0")
-    private BigDecimal priceEur;
+    private BigDecimal priceEuro;
 
     @NotNull(message = "Dostupnost proizvoda je obavezna")
     private Boolean isAvailable;

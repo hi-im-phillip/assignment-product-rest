@@ -13,7 +13,7 @@ public class ProductResponseDTO {
 
     private String code;
     private String name;
-    private BigDecimal priceEur;
+    private BigDecimal priceEuro;
     private BigDecimal priceUsd;
     private Boolean isAvailable;
 
