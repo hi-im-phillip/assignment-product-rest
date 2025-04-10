@@ -11,7 +11,7 @@ import org.app.assignment.productrest.exception.ResourceNotFoundException;
 import org.app.assignment.productrest.repository.ProductRepository;
 import org.app.assignment.productrest.service.CurrencyConverter;
 import org.app.assignment.productrest.service.ProductService;
-import org.modelmapper.ModelMapper;
+import org.app.assignment.productrest.utils.ProductFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -30,7 +30,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final ModelMapper modelMapper;
+    private final ProductFactory factory;
     private final CurrencyConverter currencyConverter;
 
     @Value("${hnb.usd.converter.code}")
@@ -52,7 +52,7 @@ public class ProductServiceImpl implements ProductService {
         Page<Product> products = productRepository.findAll(PageRequest.of(page, size, sorting));
 
         List<ProductResponseDTO> productResponseDTOs = products.stream()
-                .map(product -> modelMapper.map(product, ProductResponseDTO.class))
+                .map(factory::toProductResponseDTO)
                 .toList();
 
         return ProductResponse.builder()
@@ -73,12 +73,13 @@ public class ProductServiceImpl implements ProductService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Product with code " + product.getCode() + " already exists.");
         }
 
-        BigDecimal productPriceConverted = currencyConverter.convert(product.getPriceEuro(), usdCurrencyCode);
+        Product entity = factory.toProduct(product);
 
-        Product entity = modelMapper.map(product, Product.class);
+        BigDecimal productPriceConverted = currencyConverter.convert(entity.getPriceEuro(), usdCurrencyCode);
+
         entity.setPriceUsd(productPriceConverted);
 
-        return modelMapper.map(productRepository.save(entity), ProductResponseDTO.class);
+        return factory.toProductResponseDTO(productRepository.save(entity));
     }
 
     @Cacheable(
@@ -89,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDTO getProductByCode(String code) {
 
-        return productRepository.findByCode(code).map(p -> modelMapper.map(p, ProductResponseDTO.class))
+        return productRepository.findByCode(code).map(factory::toProductResponseDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "code", code));
     }
 }

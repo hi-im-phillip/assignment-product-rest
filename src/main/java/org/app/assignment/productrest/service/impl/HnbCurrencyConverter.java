@@ -6,19 +6,19 @@ import org.app.assignment.productrest.dto.HnbExchangeRateDTO;
 import org.app.assignment.productrest.exception.ApiException;
 import org.app.assignment.productrest.exception.HnbApiException;
 import org.app.assignment.productrest.service.CurrencyConverter;
+import org.app.assignment.productrest.utils.CurrencyUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+
+import static org.app.assignment.productrest.utils.CurrencyUtils.DEFAULT_ROUNDING_MODE;
+import static org.app.assignment.productrest.utils.CurrencyUtils.DEFAULT_SCALE;
+
 
 @Service
 @RequiredArgsConstructor
 public class HnbCurrencyConverter implements CurrencyConverter {
-
-    private static final int DEFAULT_SCALE = 2;
-    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
-    private static final String SEPARATOR = ",";
 
     private final ConverterApiClient<HnbExchangeRateDTO> converterApiClient;
 
@@ -45,8 +45,8 @@ public class HnbCurrencyConverter implements CurrencyConverter {
         }
 
         try {
-            BigDecimal middleExchangeRate = new BigDecimal(middleRateStr.replace(SEPARATOR, "."));
-            return amount.multiply(middleExchangeRate).setScale(DEFAULT_SCALE, ROUNDING_MODE);
+            BigDecimal middleExchangeRate = CurrencyUtils.parseBigDecimal(middleRateStr);
+            return amount.multiply(middleExchangeRate).setScale(DEFAULT_SCALE, DEFAULT_ROUNDING_MODE);
         } catch (NumberFormatException e) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid exchange rate format: " + middleRateStr);
         }
