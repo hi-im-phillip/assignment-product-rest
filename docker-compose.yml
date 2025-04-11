@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  product-service:
+    build:
+      context: .UPDATE ME
+      dockerfile: Dockerfile
+    image: product-service:latest
+    container_name: product-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_APPLICATION_NAME=product-rest
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_METRICS_TAGS_APPLICATION=product-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/product-rest
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_SQL_INIT_PLATFORM=postgres
+      - SPRING_SQL_INIT_CONTINUE_ON_ERROR=true
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=5
+      - SPRING_DATASOURCE_HIKARI_MAX_LIFETIME=600000
+      - HNB_API_URL=https://api.hnb.hr/tecajn-eur/v3
+      - HNB_USD_CONVERTER_CODE=USD
+      - PRICE_VALIDATE_ENABLED=true
+    depends_on:
+      - db
+    networks:
+      - product_network
+      - monitoring_network
+    restart: unless-stopped
+
+  db:
+    image: postgres:14-alpine
+    container_name: product-service-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=product-rest
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - product_network
+    restart: unless-stopped
+
+networks:
+  product_network:
+    driver: bridge
+  monitoring_network:
+    external: true
+    name: monitoring_network
+
+volumes:
+  postgres_data:
