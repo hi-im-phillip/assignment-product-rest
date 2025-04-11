@@ -107,7 +107,7 @@ class ProductControllerTest {
 
     @Test
     void shouldGetProductByCode() throws Exception {
-        String productCode = "PROD001";
+        String productCode = "PROD001091";
         given(productService.getProductByCode(productCode))
                 .willReturn(productResponseDTO);
 
