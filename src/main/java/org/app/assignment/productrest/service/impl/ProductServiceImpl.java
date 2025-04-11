@@ -91,6 +91,6 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDTO getProductByCode(String code) {
 
         return productRepository.findByCode(code).map(factory::toProductResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "code", code));
+                .orElseThrow(() -> new ResourceNotFoundException("Produkt", "code", code));
     }
 }
